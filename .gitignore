@@ -27,3 +27,6 @@ models/
 # Temporary
 *.tmp
 *.temp
+
+# Office temporary files
+~$*.docx

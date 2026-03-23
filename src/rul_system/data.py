@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -67,15 +68,107 @@ def default_condition_map() -> Dict[str, Dict[str, float]]:
             - cutoff_voltage_v: 截止电压（伏）
         """
         return {
-                "B0005": {"ambient_temp_c": 24.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.7},
-                "B0006": {"ambient_temp_c": 24.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.5},
-                "B0007": {"ambient_temp_c": 24.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.2},
-                "B0018": {"ambient_temp_c": 24.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.5},
-                "B0053": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.0},
-                "B0054": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.2},
-                "B0055": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.5},
-                "B0056": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.7},
+                "B0005": {"ambient_temp_c": 24.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.7, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0006": {"ambient_temp_c": 24.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.5, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0007": {"ambient_temp_c": 24.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.2, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0018": {"ambient_temp_c": 24.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.5, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0025": {"ambient_temp_c": 24.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.0, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0026": {"ambient_temp_c": 24.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.2, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0027": {"ambient_temp_c": 24.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.5, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0028": {"ambient_temp_c": 24.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.7, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0029": {"ambient_temp_c": 43.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.0, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0030": {"ambient_temp_c": 43.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.2, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0031": {"ambient_temp_c": 43.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.5, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0032": {"ambient_temp_c": 43.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.7, "eol_capacity_ah": 1.4, "anomaly_flag": 0.0},
+                "B0033": {"ambient_temp_c": 24.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.0, "eol_capacity_ah": 1.6, "anomaly_flag": 0.0},
+                "B0034": {"ambient_temp_c": 24.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.2, "eol_capacity_ah": 1.6, "anomaly_flag": 0.0},
+                "B0036": {"ambient_temp_c": 24.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.7, "eol_capacity_ah": 1.6, "anomaly_flag": 0.0},
+                "B0038": {"ambient_temp_c": 24.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.2, "eol_capacity_ah": 1.6, "anomaly_flag": 0.0},
+                "B0039": {"ambient_temp_c": 24.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.5, "eol_capacity_ah": 1.6, "anomaly_flag": 0.0},
+                "B0040": {"ambient_temp_c": 24.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.7, "eol_capacity_ah": 1.6, "anomaly_flag": 0.0},
+                "B0041": {"ambient_temp_c": 4.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.0, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0042": {"ambient_temp_c": 4.0, "discharge_current_a": 4.0, "cutoff_voltage_v": 2.2, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0043": {"ambient_temp_c": 4.0, "discharge_current_a": 1.0, "cutoff_voltage_v": 2.5, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0044": {"ambient_temp_c": 4.0, "discharge_current_a": 1.0, "cutoff_voltage_v": 2.7, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0045": {"ambient_temp_c": 4.0, "discharge_current_a": 1.0, "cutoff_voltage_v": 2.0, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0046": {"ambient_temp_c": 4.0, "discharge_current_a": 1.0, "cutoff_voltage_v": 2.2, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0047": {"ambient_temp_c": 4.0, "discharge_current_a": 1.0, "cutoff_voltage_v": 2.5, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0048": {"ambient_temp_c": 4.0, "discharge_current_a": 1.0, "cutoff_voltage_v": 2.7, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0049": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.0, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0050": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.2, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0051": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.5, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0052": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.7, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0053": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.0, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0054": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.2, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0055": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.5, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
+                "B0056": {"ambient_temp_c": 4.0, "discharge_current_a": 2.0, "cutoff_voltage_v": 2.7, "eol_capacity_ah": 1.4, "anomaly_flag": 1.0},
         }
+
+
+def infer_condition_group(condition: Dict[str, float]) -> str:
+        """
+        根据工况字段生成组标签，用于 LOCO 协议划分。
+
+        规则采用“温度_电流”组合，例如 "T24_I2"。
+        """
+        temp = int(condition.get("ambient_temp_c", -999))
+        current = int(condition.get("discharge_current_a", -999))
+        return f"T{temp}_I{current}"
+
+
+def build_protocol_splits(
+        battery_ids: List[str],
+        condition_map: Dict[str, Dict[str, float]],
+) -> Dict[str, List[Dict[str, List[str]]]]:
+        """
+        生成 V1 系统的三类评测协议划分。
+
+        包含:
+        - same_condition: 同工况留一电池（测试集为单电池）
+        - lobo: Leave-One-Battery-Out（测试集为单电池）
+        - loco: Leave-One-Condition-Out（测试集为同工况组）
+        """
+        valid_ids = [bid for bid in battery_ids if bid in condition_map]
+        protocols: Dict[str, List[Dict[str, List[str]]]] = {
+                "same_condition": [],
+                "lobo": [],
+                "loco": [],
+        }
+
+        group_to_ids: Dict[str, List[str]] = defaultdict(list)
+        for bid in valid_ids:
+                group_name = infer_condition_group(condition_map[bid])
+                group_to_ids[group_name].append(bid)
+
+        for test_id in valid_ids:
+                train_ids = [bid for bid in valid_ids if bid != test_id]
+                if train_ids:
+                        protocols["lobo"].append({"train_ids": train_ids, "test_ids": [test_id]})
+
+        for group_name, test_ids in group_to_ids.items():
+                train_ids = [bid for bid in valid_ids if bid not in test_ids]
+                if train_ids and test_ids:
+                        protocols["loco"].append(
+                                {
+                                        "group": group_name,
+                                        "train_ids": train_ids,
+                                        "test_ids": test_ids,
+                                }
+                        )
+
+                if len(test_ids) >= 2:
+                        for test_id in test_ids:
+                                same_train = [bid for bid in test_ids if bid != test_id]
+                                if same_train:
+                                        protocols["same_condition"].append(
+                                                {
+                                                        "group": group_name,
+                                                        "train_ids": same_train,
+                                                        "test_ids": [test_id],
+                                                }
+                                        )
+
+        return protocols
 
 
 def _extract_feature_matrix(
