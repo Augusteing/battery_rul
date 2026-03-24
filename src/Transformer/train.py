@@ -131,14 +131,18 @@ def run_protocol_experiment(
     for split in protocol_splits:
         train_ids = split["train_ids"]
         for test_id in split["test_ids"]:
-            train_loader, test_loader, scaler_y, test_actual_capacity = prepare_condition_aware_dataloaders(
-                battery_dict=battery_dict,
-                train_ids=train_ids,
-                test_id=test_id,
-                condition_map=condition_map,
-                seq_length=seq_length,
-                batch_size=batch_size,
-            )
+            try:
+                train_loader, test_loader, scaler_y, test_actual_capacity = prepare_condition_aware_dataloaders(
+                    battery_dict=battery_dict,
+                    train_ids=train_ids,
+                    test_id=test_id,
+                    condition_map=condition_map,
+                    seq_length=seq_length,
+                    batch_size=batch_size,
+                )
+            except ValueError as error:
+                print(f"[Skip] protocol_group={split.get('group', 'mixed')} test_id={test_id} reason={error}")
+                continue
 
             model = model_cls(**model_kwargs)
             _ = train_model(

@@ -224,6 +224,8 @@ def _extract_feature_matrix(
                 except Exception:
                         continue
 
+        if not rows:
+                return np.empty((0, 6), dtype=np.float32)
         return np.array(rows, dtype=np.float32)
 
 
@@ -245,6 +247,13 @@ def _to_windows(matrix: np.ndarray, seq_length: int) -> Tuple[np.ndarray, np.nda
         - x_seq: np.ndarray, shape = (N-seq_length, seq_length, num_features)
         - y_seq: np.ndarray, shape = (N-seq_length, 1)
         """
+        num_features = matrix.shape[1] - 1
+        if len(matrix) <= seq_length:
+                return (
+                        np.empty((0, seq_length, num_features), dtype=np.float32),
+                        np.empty((0, 1), dtype=np.float32),
+                )
+
         x_seq, y_seq = [], []
         for i in range(len(matrix) - seq_length):
                 x_seq.append(matrix[i : i + seq_length, :-1])
@@ -295,12 +304,25 @@ def prepare_condition_aware_dataloaders(
         - test_actual_capacity: np.ndarray
             测试电池原始容量轨迹（未缩放），便于绘图与对比。
         """
+        required_ids = train_ids + [test_id]
         feature_mats = {
                 bid: _extract_feature_matrix(battery_dict[bid], bid, condition_map)
-                for bid in train_ids + [test_id]
+                for bid in required_ids
+                if bid in battery_dict and bid in condition_map
         }
 
-        train_concat = np.vstack([feature_mats[bid] for bid in train_ids])
+        if test_id not in feature_mats:
+                raise ValueError(f"test_id={test_id} 未找到有效特征数据")
+
+        train_concat_list = [
+                feature_mats[bid]
+                for bid in train_ids
+                if bid in feature_mats and feature_mats[bid].shape[0] > 0
+        ]
+        if not train_concat_list:
+                raise ValueError("训练集为空：无法拟合缩放器")
+
+        train_concat = np.vstack(train_concat_list)
 
         scaler_x = MinMaxScaler()
         scaler_y = MinMaxScaler()
@@ -309,17 +331,27 @@ def prepare_condition_aware_dataloaders(
 
         x_train_list, y_train_list = [], []
         for bid in train_ids:
+                if bid not in feature_mats:
+                        continue
                 mat = feature_mats[bid].copy()
+                if mat.shape[0] <= seq_length:
+                        continue
                 mat[:, :-1] = scaler_x.transform(mat[:, :-1])
                 mat[:, -1:] = scaler_y.transform(mat[:, -1:].reshape(-1, 1))
                 x_seq, y_seq = _to_windows(mat, seq_length)
-                x_train_list.append(x_seq)
-                y_train_list.append(y_seq)
+                if len(x_seq) > 0:
+                        x_train_list.append(x_seq)
+                        y_train_list.append(y_seq)
+
+        if not x_train_list:
+                raise ValueError("训练样本为空：请减小 seq_length 或检查电池循环长度")
 
         train_x = np.vstack(x_train_list)
         train_y = np.vstack(y_train_list)
 
         test_mat = feature_mats[test_id].copy()
+        if test_mat.shape[0] <= seq_length:
+                raise ValueError(f"测试电池 {test_id} 样本不足，无法构建窗口")
         test_actual_capacity = test_mat[:, -1].copy()
         test_mat[:, :-1] = scaler_x.transform(test_mat[:, :-1])
         test_mat[:, -1:] = scaler_y.transform(test_mat[:, -1:].reshape(-1, 1))
