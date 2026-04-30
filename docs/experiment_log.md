@@ -64,3 +64,15 @@ Use this file to record every meaningful run or data-processing decision.
 - Observations: all-cell loader has 443 train / 193 test samples. Single-cell loaders match M2 split counts. First training batch shape is `(16, 4, 128)`.
 - Deviations from paper: none for loader behavior. The feature interpolation assumption from M2 remains in effect.
 - Next action: implement the PI-TNet Convolutional Data Processor components: CDC, HDC, VDC, and vanilla convolution.
+
+### 2026-05-01 - M4 PI-TNet base model
+
+- Purpose: Implement the base PI-TNet neural architecture before adding the Verhulst physics loss.
+- Code version: `src/battery_rul/models/pi_tnet.py`, `scripts/verify_pi_tnet_model.py`.
+- Config: `configs/model/pi_tnet.yaml`.
+- Dataset files: `data/processed/nasa_pi_tnet_features.npz`, `data/processed/nasa_pi_tnet_metadata.csv`.
+- Main parameters: input shape `(batch, 4, 128)`, CDP output dimension `64`, Transformer heads `4`, Transformer layers `2`, feedforward dimension `128`, dropout `0.1`.
+- Verification: forward/backward pass on a real `B0005` training batch succeeded on CUDA. Output shapes are SOH `(16, 1)`, capacity `(16, 1)`, embedding `(16, 64)`.
+- Observations: model has 118,530 trainable parameters. The initial MSE loss is random-initialization only and is not a performance result.
+- Deviations from paper: exact CDP implementation details and tensor dimensions are not published. The implementation follows the textual CDC/HDC/VDC + vanilla convolution + Transformer description and records the engineering choices in `references/pi_tnet_notes.md`.
+- Next action: implement PI-TNet training losses, including data regression loss and Verhulst-constrained physics loss.

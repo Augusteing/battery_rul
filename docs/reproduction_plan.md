@@ -54,6 +54,7 @@ Data-audit note: the downloaded NASA `B0018.mat` file contains 132 discharge cyc
 
 ### M4: Physics-Informed Model
 
+- Implement the PI-TNet base model: CDP with CDC/HDC/VDC and vanilla convolution, followed by a Transformer encoder.
 - Implement the physics residual loss using the selected degradation model.
 - Add monotonic degradation regularization if required.
 - Compare data-only and physics-informed training.
