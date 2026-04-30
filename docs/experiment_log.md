@@ -76,3 +76,17 @@ Use this file to record every meaningful run or data-processing decision.
 - Observations: model has 118,530 trainable parameters. The initial MSE loss is random-initialization only and is not a performance result.
 - Deviations from paper: exact CDP implementation details and tensor dimensions are not published. The implementation follows the textual CDC/HDC/VDC + vanilla convolution + Transformer description and records the engineering choices in `references/pi_tnet_notes.md`.
 - Next action: implement PI-TNet training losses, including data regression loss and Verhulst-constrained physics loss.
+
+### 2026-05-01 - M5 Data-only PI-TNet training core
+
+- Purpose: Implement the training loop, prediction export, checkpointing, and NASA SOH/capacity metrics for data-only PI-TNet.
+- Code version: `scripts/train_pi_tnet.py`, `src/battery_rul/training/trainer.py`, `src/battery_rul/evaluation/metrics.py`.
+- Config: `configs/model/pi_tnet.yaml`.
+- Dataset files: `data/processed/nasa_pi_tnet_features.npz`, `data/processed/nasa_pi_tnet_metadata.csv`.
+- Train/validation/test split: first 70% discharge cycles for training and last 30% for testing; no validation split.
+- Main parameters: Adam optimizer, learning rate `0.001`, weight decay `0.0001`, batch size `16`, epochs `54`, data loss = MSE on measured capacity.
+- Numerical conditioning: input channels are standardized using training-split statistics before entering the model; labels remain in physical units.
+- Metrics/artifacts: histories in `results/logs`, predictions in `results/tables`, checkpoints in `models/checkpoints`.
+- Observations: 54-epoch data-only test SOH metrics were `B0005` MAE 0.013303 / RMSE 0.013679 / R2 0.523470, `B0006` MAE 0.019479 / RMSE 0.023762 / R2 0.490951, `B0007` MAE 0.002894 / RMSE 0.003725 / R2 0.957281, `B0018` MAE 0.009936 / RMSE 0.011514 / R2 0.318125.
+- Deviations from paper: this is data-only PI-TNet training, not the final Verhulst-constrained PI-TNet. The paper's physics loss is not yet active.
+- Next action: implement the Verhulst-constrained loss and compare data-only vs physics-informed PI-TNet.

@@ -64,6 +64,8 @@ Data-audit note: the downloaded NASA `B0018.mat` file contains 132 discharge cyc
 - Implement Transformer encoder architecture.
 - Integrate data loss and physics loss.
 - Reproduce main curves and metric tables.
+- First establish a data-only training baseline with the paper's 54 epochs and batch size 16.
+- Then add the Verhulst-constrained loss and compare metrics against the data-only baseline.
 
 ### M6: Thesis Outputs
 

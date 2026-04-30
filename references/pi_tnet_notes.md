@@ -62,3 +62,15 @@ Reproducible engineering choices:
 - The model outputs unconstrained SOH because the raw NASA labels include an initial `B0006` SOH greater than 1.0.
 
 These choices follow the paper text, but the exact unpublished implementation may differ.
+
+## Training Core
+
+The data-only training core uses the paper's reported optimizer protocol where available:
+
+- Adam optimizer.
+- Batch size 16.
+- 54 training epochs.
+- First 70% discharge cycles for training, remaining 30% for testing.
+- Training target is measured capacity; SOH is derived from capacity / 2 Ah.
+
+For numerical conditioning, input channels are standardized using only training-split statistics. This does not change raw data artifacts or labels, but it is an implementation choice because the paper does not disclose its normalization details.

@@ -7,5 +7,5 @@ Planned command-line entry points:
 - `build_nasa_features.py`: create fixed-length PI-TNet discharge tensors and chronological 70/30 splits.
 - `verify_nasa_dataloader.py`: verify paper-consistent train/test data loaders.
 - `verify_pi_tnet_model.py`: verify PI-TNet forward and backward passes on a real NASA batch.
-- `train.py`: train baseline or PI-TNet models from YAML configuration.
+- `train_pi_tnet.py`: train data-only PI-TNet from YAML configuration.
 - `evaluate.py`: compute metrics and export figures.
