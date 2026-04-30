@@ -1,0 +1,38 @@
+dataset:
+  name: nasa_battery_aging
+  source: NASA Ames Prognostics Center of Excellence
+  raw_dir: data/raw
+  interim_dir: data/interim
+  processed_dir: data/processed
+  split_dir: data/splits
+
+cells:
+  primary:
+    - B0005
+    - B0006
+    - B0007
+    - B0018
+  candidate_extra: []
+
+task:
+  target: soh
+  capacity_unit: Ah
+  nominal_capacity: 2.0
+  end_of_life_ratio: 0.7
+
+preprocessing:
+  cycle_type: discharge
+  keep_charge_curves: false
+  keep_temperature: true
+  normalize_features: true
+  interpolation:
+    enabled: true
+    points_per_cycle: 128
+
+splits:
+  protocol: leave_one_cell_out
+  test_cells:
+    - B0005
+    - B0006
+    - B0007
+    - B0018

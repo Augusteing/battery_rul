@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "battery-rul"
+version = "0.1.0"
+description = "NASA battery SOH/RUL reproduction with physics-informed neural networks."
+requires-python = ">=3.10"
+dependencies = [
+  "matplotlib",
+  "numpy",
+  "pandas",
+  "pyyaml",
+  "scipy",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

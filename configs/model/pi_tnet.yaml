@@ -1,0 +1,40 @@
+model:
+  name: pi_tnet
+  description: Physics-informed Transformer network for battery SOH prognostics
+
+input:
+  sequence_length: 128
+  features:
+    - voltage_measured
+    - current_measured
+    - temperature_measured
+    - time
+
+transformer:
+  d_model: 64
+  nhead: 4
+  num_layers: 2
+  dim_feedforward: 128
+  dropout: 0.1
+
+regression_head:
+  hidden_dims:
+    - 64
+    - 32
+  activation: relu
+  output: soh
+
+physics:
+  enabled: true
+  degradation_model: verhulst
+  residual_weight: 0.1
+  monotonicity_weight: 0.01
+
+training:
+  optimizer: adam
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  batch_size: 32
+  max_epochs: 300
+  early_stopping_patience: 30
+  seed: 42

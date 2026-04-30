@@ -18,11 +18,35 @@ Thumbs.db
 
 # Data artifacts (large)
 data/raw/
-data/processed/
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/splits/*
+!data/splits/.gitkeep
 
 # Experiment outputs
-results/
-models/
+results/*
+!results/README.md
+!results/figures/
+results/figures/*
+!results/figures/.gitkeep
+!results/tables/
+results/tables/*
+!results/tables/.gitkeep
+!results/logs/
+results/logs/*
+!results/logs/.gitkeep
+
+# Model checkpoints / exports
+models/*
+!models/README.md
+!models/checkpoints/
+models/checkpoints/*
+!models/checkpoints/.gitkeep
+!models/exports/
+models/exports/*
+!models/exports/.gitkeep
 
 # Temporary
 *.tmp
