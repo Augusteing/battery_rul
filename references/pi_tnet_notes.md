@@ -17,6 +17,13 @@ The model input is described as discharge-cycle voltage, current, temperature, a
 
 The implementation section states that the first 70% of discharge cycles are selected as the training dataset; the training set is shuffled; training uses 54 epochs and batch size 16.
 
+Loader implementation:
+
+- `train`: chronological first 70%, shuffled by PyTorch `DataLoader`.
+- `test`: chronological last 30%, no shuffle.
+- Each batch returns `x`, `capacity_ah`, `soh`, `battery_id`, `discharge_index`, and `cycle_index`.
+- `x` has shape `(batch, 4, 128)` in the current reproducible feature assumption.
+
 ## Data Audit Discrepancy
 
 Local raw NASA files show:

@@ -46,8 +46,11 @@ Data-audit note: the downloaded NASA `B0018.mat` file contains 132 discharge cyc
 
 ### M3: Baseline Models
 
-- Implement a simple MLP or LSTM baseline.
-- Establish reproducible metrics under leave-one-cell-out evaluation.
+- Implement paper-consistent PyTorch data loaders.
+- Use the first 70% discharge cycles for training and the remaining 30% for testing.
+- Shuffle only the training loader.
+- Use batch size 16 and 54 epochs as reported in the implementation details.
+- Establish reproducible metrics for the paper's per-cell NASA evaluation.
 
 ### M4: Physics-Informed Model
 

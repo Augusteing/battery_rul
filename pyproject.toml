@@ -13,6 +13,7 @@ dependencies = [
   "pandas",
   "pyyaml",
   "scipy",
+  "torch",
 ]
 
 [tool.setuptools.packages.find]

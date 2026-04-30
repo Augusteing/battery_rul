@@ -51,3 +51,16 @@ Use this file to record every meaningful run or data-processing decision.
 - Observations: feature tensor shape is `(636, 4, 128)`. Split counts are `B0005`: 117 train / 51 test, `B0006`: 117 / 51, `B0007`: 117 / 51, `B0018`: 92 / 40.
 - Deviations from paper: the paper does not disclose the exact fixed sampling length. NASA raw curves have variable sample lengths, so normalized-time interpolation to 128 points is used as a documented reproducibility assumption.
 - Next action: implement the paper's baseline data loader and begin the PI-TNet model stack with CDP components.
+
+### 2026-05-01 - M3 NASA training data loader
+
+- Purpose: Implement paper-consistent PyTorch data loading for PI-TNet training and testing.
+- Code version: `src/battery_rul/data/dataloaders.py`, `scripts/verify_nasa_dataloader.py`.
+- Config: `configs/model/pi_tnet.yaml`.
+- Dataset files: `data/processed/nasa_pi_tnet_features.npz`, `data/processed/nasa_pi_tnet_metadata.csv`.
+- Train/validation/test split: first 70% discharge cycles for training and last 30% for testing; no validation split introduced.
+- Main parameters: batch size = 16; training loader shuffles; test loader preserves chronological order; feature tensor shape per sample is `(4, 128)`.
+- Metrics/artifacts: `results/logs/nasa_dataloader_verification.json`.
+- Observations: all-cell loader has 443 train / 193 test samples. Single-cell loaders match M2 split counts. First training batch shape is `(16, 4, 128)`.
+- Deviations from paper: none for loader behavior. The feature interpolation assumption from M2 remains in effect.
+- Next action: implement the PI-TNet Convolutional Data Processor components: CDC, HDC, VDC, and vanilla convolution.
