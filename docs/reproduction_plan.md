@@ -41,6 +41,8 @@ Data-audit note: the downloaded NASA `B0018.mat` file contains 132 discharge cyc
 - Convert variable-length discharge curves into fixed-length sequences.
 - Build feature tensors from voltage, current, temperature, and time.
 - Define SOH as measured capacity divided by nominal capacity.
+- Follow the paper's chronological split: the first 70% discharge cycles are used for training and the remaining 30% for testing; the training set is shuffled during model training.
+- Reproducibility assumption: because the paper states that measurements are compared at identical sampling points but does not disclose the exact number of points, each discharge curve is interpolated to a fixed normalized-time grid. The current configuration uses 128 points per cycle and keeps raw physical units.
 
 ### M3: Baseline Models
 

@@ -15,6 +15,8 @@ Operational settings reported by the paper:
 
 The model input is described as discharge-cycle voltage, current, temperature, and timestamp. The predicted output is capacity/SOH.
 
+The implementation section states that the first 70% of discharge cycles are selected as the training dataset; the training set is shuffled; training uses 54 epochs and batch size 16.
+
 ## Data Audit Discrepancy
 
 Local raw NASA files show:
@@ -27,3 +29,9 @@ Local raw NASA files show:
 | B0018 | 132 |
 
 Therefore, the reproduction will use raw-data-derived cycle counts and explicitly report the `B0018` discrepancy. No synthetic cycles are introduced.
+
+## Feature Construction Assumption
+
+The paper reports that voltage/current values are measured at identical sampling time points during each cycle, and that voltage, current, temperature, capacity, and time are extracted during discharge. The exact number of sampling points used by the authors is not disclosed.
+
+Local NASA discharge curves have variable lengths. For reproducibility, the implementation interpolates each discharge curve onto a normalized time grid with 128 points and retains raw physical units. This parameter is configuration-controlled and should be revisited if the authors' code or supplementary material becomes available.
