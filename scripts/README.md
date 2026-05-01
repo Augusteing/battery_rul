@@ -8,4 +8,5 @@ Planned command-line entry points:
 - `verify_nasa_dataloader.py`: verify paper-consistent train/test data loaders.
 - `verify_pi_tnet_model.py`: verify PI-TNet forward and backward passes on a real NASA batch.
 - `train_pi_tnet.py`: train data-only PI-TNet from YAML configuration.
+- `plot_prediction_curves.py`: plot true vs predicted SOH curves from saved predictions.
 - `evaluate.py`: compute metrics and export figures.
