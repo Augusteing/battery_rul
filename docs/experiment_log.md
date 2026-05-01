@@ -124,3 +124,16 @@ Use this file to record every meaningful run or data-processing decision.
 - Comparison against data-only: at best epoch, the physics-informed model improves over the current data-only baseline on all four cells.
 - Artifacts: `results/tables/pi_tnet_physics_informed_best_54epochs_metrics.csv`, `results/tables/pi_tnet_data_vs_best_physics_54epochs_comparison.csv`, and `results/figures/comparison_data_vs_physics_*`.
 - Next action: use best-epoch physics-informed checkpoints for thesis reporting, while keeping the final-epoch metrics documented as a training-stability caveat.
+
+### 2026-05-01 - M6 Physics-loss ablation on NASA PI-TNet
+
+- Purpose: Analyze the contribution of each physics-informed loss component beyond the paper's full objective.
+- Code version: `src/battery_rul/physics/verhulst.py`, `scripts/train_pi_tnet.py`, `scripts/run_physics_loss_ablation.py`, `scripts/summarize_physics_loss_ablation.py`, `scripts/plot_physics_loss_ablation.py`.
+- Config: `configs/model/pi_tnet.yaml`.
+- Ablation settings: `L_u` only, `L_u + L_f`, `L_u + L_t`, and `L_u + L_f + L_t`.
+- Main parameters: chronological 70/30 split per cell, batch size `16`, epochs `54`, raw discharge-cycle index, `capacity_loss` data term, best-epoch model selection.
+- Metrics/artifacts: `results/tables/physics_loss_ablation_best_54epochs.csv`, `results/tables/physics_loss_ablation_best_54epochs_mean.csv`, `results/figures/physics_loss_ablation_best_54epochs_soh_rmse.png`, plus per-run histories and prediction tables.
+- Main findings: on the four-cell mean, `L_u + L_t` achieved the best SOH RMSE (`0.006857`), followed by `L_u` (`0.007273`), while the paper's full `L_u + L_f + L_t` objective reached `0.007605`.
+- Cell-level observations: `L_u + L_t` was best on `B0005`, `B0006`, `B0007`, and `B0018` under best-epoch selection. The full physics objective remained competitive and outperformed `L_u + L_f` on all four cells.
+- Interpretation: the temporal residual term contributes more consistently than the structural residual term in the current NASA reproduction, and adding `L_f` does not automatically improve average accuracy.
+- Next action: report this ablation as independent analysis in Chapter 5, then test a monotonicity-regularized extension if needed for thesis novelty.

@@ -41,6 +41,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--no-standardize", action="store_true")
     parser.add_argument("--no-physics", action="store_true")
+    parser.add_argument("--physics-time-mode", type=str, default=None)
+    parser.add_argument("--physics-data-loss-mode", type=str, default=None)
+    parser.add_argument("--disable-structural-loss", action="store_true")
+    parser.add_argument("--disable-temporal-loss", action="store_true")
+    parser.add_argument("--monotonicity-weight", type=float, default=None)
     return parser.parse_args()
 
 
@@ -58,6 +63,17 @@ def resolve_device(name: str) -> torch.device:
 def main() -> None:
     args = parse_args()
     config = load_training_config(args.config)
+    physics_section = config.setdefault("physics", {})
+    if args.physics_time_mode is not None:
+        physics_section["time_mode"] = args.physics_time_mode
+    if args.physics_data_loss_mode is not None:
+        physics_section["data_loss_mode"] = args.physics_data_loss_mode
+    if args.disable_structural_loss:
+        physics_section["use_structural_loss"] = False
+    if args.disable_temporal_loss:
+        physics_section["use_temporal_loss"] = False
+    if args.monotonicity_weight is not None:
+        physics_section["monotonicity_weight"] = float(args.monotonicity_weight)
     training_config = config["training"]
     physics_config = config.get("physics", {})
     seed = int(training_config.get("seed", 42))
@@ -119,7 +135,14 @@ def main() -> None:
         "outputs": {key: str(value) for key, value in paths.items()},
     }
     if physics_objective is not None:
-        summary["physics"] = physics_objective.diagnostics()
+        summary["physics"] = {
+            **physics_objective.diagnostics(),
+            "time_mode": physics_objective.config.time_mode,
+            "data_loss_mode": physics_objective.config.data_loss_mode,
+            "use_structural_loss": physics_objective.config.use_structural_loss,
+            "use_temporal_loss": physics_objective.config.use_temporal_loss,
+            "monotonicity_weight": physics_objective.config.monotonicity_weight,
+        }
     summary_path = args.output_dir / "logs" / f"{run_name}_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
 

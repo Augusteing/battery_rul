@@ -22,6 +22,8 @@ class PhysicsConfig:
 
     enabled: bool = True
     nominal_capacity_ah: float = 2.0
+    use_structural_loss: bool = True
+    use_temporal_loss: bool = True
     monotonicity_weight: float = 0.0
     initial_r: float = 0.01
     initial_R: float = 0.0
@@ -64,14 +66,19 @@ class AdaptivePhysicsWeights(nn.Module):
         loss_u: torch.Tensor,
         loss_t: torch.Tensor,
         loss_f: torch.Tensor,
+        use_structural_loss: bool = True,
+        use_temporal_loss: bool = True,
     ) -> torch.Tensor:
-        product = (self.lambda_u * self.lambda_t * self.lambda_f).clamp_min(1e-12)
-        return (
-            self.lambda_u * loss_u
-            + self.lambda_t * loss_t
-            + self.lambda_f * loss_f
-            - torch.log(product)
-        )
+        weighted_terms = [self.lambda_u * loss_u]
+        active_weights = [self.lambda_u]
+        if use_structural_loss:
+            weighted_terms.append(self.lambda_f * loss_f)
+            active_weights.append(self.lambda_f)
+        if use_temporal_loss:
+            weighted_terms.append(self.lambda_t * loss_t)
+            active_weights.append(self.lambda_t)
+        product = torch.stack(active_weights).prod().clamp_min(1e-12)
+        return torch.stack(weighted_terms).sum() - torch.log(product)
 
     def snapshot(self) -> dict[str, float]:
         return {
@@ -228,7 +235,17 @@ class PhysicsInformedObjective(nn.Module):
             time_index=time_index,
             battery_ids=list(batch["battery_id"]),
         )
-        total_loss = self.weights.combine(loss_u=loss_u, loss_t=loss_t, loss_f=loss_f)
+        if not self.config.use_structural_loss:
+            loss_f = loss_f.new_zeros(())
+        if not self.config.use_temporal_loss:
+            loss_t = loss_t.new_zeros(())
+        total_loss = self.weights.combine(
+            loss_u=loss_u,
+            loss_t=loss_t,
+            loss_f=loss_f,
+            use_structural_loss=self.config.use_structural_loss,
+            use_temporal_loss=self.config.use_temporal_loss,
+        )
 
         if self.config.monotonicity_weight > 0:
             total_loss = total_loss + self.config.monotonicity_weight * monotonicity_loss
@@ -257,6 +274,8 @@ def physics_config_from_mapping(config: dict) -> PhysicsConfig:
     return PhysicsConfig(
         enabled=bool(physics_config.get("enabled", True)),
         nominal_capacity_ah=float(task_config.get("nominal_capacity", 2.0)),
+        use_structural_loss=bool(physics_config.get("use_structural_loss", True)),
+        use_temporal_loss=bool(physics_config.get("use_temporal_loss", True)),
         monotonicity_weight=float(physics_config.get("monotonicity_weight", 0.0)),
         initial_r=float(initial_parameters.get("r", 0.01)),
         initial_R=float(initial_parameters.get("R", 0.0)),
