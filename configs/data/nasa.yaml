@@ -30,7 +30,7 @@ preprocessing:
     points_per_cycle: 128
 
 splits:
-  protocol: leave_one_cell_out
+  protocol: chronological_70_30_per_cell
   test_cells:
     - B0005
     - B0006

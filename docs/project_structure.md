@@ -30,7 +30,7 @@ utils/         历史工具代码，后续逐步迁移到 src/battery_rul/utils
 
 ```text
 src/battery_rul/data/        NASA .mat 读取、循环提取、特征构造
-src/battery_rul/models/      LSTM、Transformer、PI-TNet 等模型定义
+src/battery_rul/models/      PI-TNet/Transformer 等当前主线模型定义
 src/battery_rul/physics/     Verhulst 退化模型、物理残差、单调性约束
 src/battery_rul/training/    损失函数、训练循环、早停和检查点
 src/battery_rul/evaluation/  SOH/RUL 指标、预测结果汇总

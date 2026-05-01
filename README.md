@@ -44,4 +44,10 @@ battery-rul/
 
 ## Current Status
 
-Project structure initialized. The next step is raw NASA data inspection and cycle-level preprocessing.
+The NASA-only PI-TNet reproduction pipeline is active on the current branch.
+
+- NASA raw-data audit is complete, including the documented `B0018` cycle-count discrepancy.
+- Fixed-length discharge-cycle features are built with a chronological `70/30` split per battery.
+- The CDP + Transformer PI-TNet backbone is implemented.
+- A data-only baseline has been trained and exported for all four NASA cells.
+- The next reproduction step is Verhulst-constrained physics-informed training.

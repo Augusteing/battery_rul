@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from collections import defaultdict
 from typing import Iterable
 
 import numpy as np
@@ -12,6 +13,7 @@ import torch
 from torch import nn
 
 from battery_rul.evaluation import regression_metrics
+from battery_rul.physics import PhysicsInformedObjective
 
 
 @dataclass(frozen=True)
@@ -59,9 +61,10 @@ def train_one_epoch(
     optimizer: torch.optim.Optimizer,
     device: torch.device,
     standardizer: ChannelStandardizer | None = None,
-) -> float:
+    physics_objective: PhysicsInformedObjective | None = None,
+) -> dict[str, float]:
     model.train()
-    total_loss = 0.0
+    metric_sums: dict[str, float] = defaultdict(float)
     total_samples = 0
     for batch in loader:
         x, target_capacity = _batch_to_device(batch, device)
@@ -69,13 +72,25 @@ def train_one_epoch(
             x = standardizer.transform(x)
         optimizer.zero_grad(set_to_none=True)
         output = model(x)
-        loss = nn.functional.mse_loss(output["capacity_ah"], target_capacity)
+        if physics_objective is None:
+            data_loss = nn.functional.mse_loss(output["capacity_ah"], target_capacity)
+            loss_terms = {
+                "total_loss": data_loss,
+                "data_loss": data_loss,
+            }
+        else:
+            loss_terms = physics_objective(output=output, batch=batch, device=device)
+        loss = loss_terms["total_loss"]
         loss.backward()
         optimizer.step()
         batch_size = x.size(0)
-        total_loss += float(loss.item()) * batch_size
+        for name, value in loss_terms.items():
+            metric_sums[name] += float(value.detach().item()) * batch_size
         total_samples += batch_size
-    return total_loss / total_samples
+    metrics = {name: value / total_samples for name, value in metric_sums.items()}
+    if physics_objective is not None:
+        metrics.update(physics_objective.diagnostics())
+    return metrics
 
 
 @torch.no_grad()
@@ -136,24 +151,32 @@ def train_model(
     device: torch.device,
     max_epochs: int,
     standardize: bool = True,
+    physics_objective: PhysicsInformedObjective | None = None,
 ) -> TrainResult:
     standardizer = None
     if standardize:
         standardizer = ChannelStandardizer.fit(train_loader.dataset.x).to(device)
 
     model.to(device)
+    if physics_objective is not None:
+        physics_objective.to(device)
     history_rows = []
     for epoch in range(1, max_epochs + 1):
-        train_loss = train_one_epoch(
+        train_metrics = train_one_epoch(
             model=model,
             loader=train_loader,
             optimizer=optimizer,
             device=device,
             standardizer=standardizer,
+            physics_objective=physics_objective,
         )
         train_predictions = predict(model, train_loader, device, standardizer)
         test_predictions = predict(model, test_loader, device, standardizer)
-        row = {"epoch": epoch, "train_loss": train_loss}
+        row = {
+            "epoch": epoch,
+            "train_loss": train_metrics.pop("total_loss"),
+        }
+        row.update({f"train_{name}": value for name, value in train_metrics.items()})
         row.update(evaluate_predictions(train_predictions, "train"))
         row.update(evaluate_predictions(test_predictions, "test"))
         history_rows.append(row)
@@ -163,6 +186,9 @@ def train_model(
         "optimizer_state_dict": optimizer.state_dict(),
         "max_epochs": max_epochs,
         "standardize": standardize,
+        "physics_objective_state_dict": (
+            None if physics_objective is None else physics_objective.state_dict()
+        ),
         "standardizer": {
             "mean": None if standardizer is None else standardizer.mean.detach().cpu(),
             "std": None if standardizer is None else standardizer.std.detach().cpu(),

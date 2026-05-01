@@ -90,3 +90,15 @@ Use this file to record every meaningful run or data-processing decision.
 - Observations: 54-epoch data-only test SOH metrics were `B0005` MAE 0.013303 / RMSE 0.013679 / R2 0.523470, `B0006` MAE 0.019479 / RMSE 0.023762 / R2 0.490951, `B0007` MAE 0.002894 / RMSE 0.003725 / R2 0.957281, `B0018` MAE 0.009936 / RMSE 0.011514 / R2 0.318125.
 - Deviations from paper: this is data-only PI-TNet training, not the final Verhulst-constrained PI-TNet. The paper's physics loss is not yet active.
 - Next action: implement the Verhulst-constrained loss and compare data-only vs physics-informed PI-TNet.
+
+### 2026-05-01 - M5 Verhulst-constrained PI-TNet training objective
+
+- Purpose: Implement the paper-aligned physics-informed training objective after the data-only baseline.
+- Code version: `src/battery_rul/physics/verhulst.py`, `src/battery_rul/training/trainer.py`, `scripts/train_pi_tnet.py`.
+- Config: `configs/model/pi_tnet.yaml`.
+- Main parameters: learnable Verhulst parameters `r`, `k`, `u`, `R`; adaptive weighting over data, structural, and temporal loss terms; optional monotonicity penalty left disabled by default.
+- Physics formulation: the training objective now includes data regression loss, Verhulst structural matching, and a temporal derivative constraint on cycle-sorted predictions.
+- Paper check: Section 4.4 of `docs/main.pdf` states that the first 70% of discharge cycles are used for training and the remaining 30% for testing, with 54 epochs and batch size 16.
+- Observations: the previous `leave_one_cell_out` split label in `configs/data/nasa.yaml` did not match the implemented chronological split, so the config wording was corrected.
+- Deviations from paper: the PDF text extraction does not preserve every equation symbol cleanly, so the implementation follows the loss structure explicitly described in Section 3.6 and records the mapping in `references/formulas.md`.
+- Next action: run a smoke training pass in the `battery-rul` environment, inspect learned Verhulst parameters and loss curves, then decide whether a full 54-epoch run is ready.

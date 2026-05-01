@@ -55,8 +55,9 @@ Data-audit note: the downloaded NASA `B0018.mat` file contains 132 discharge cyc
 ### M4: Physics-Informed Model
 
 - Implement the PI-TNet base model: CDP with CDC/HDC/VDC and vanilla convolution, followed by a Transformer encoder.
-- Implement the physics residual loss using the selected degradation model.
-- Add monotonic degradation regularization if required.
+- Implement the Verhulst-constrained structural loss and temporal loss.
+- Keep adaptive loss weighting trainable, matching the paper's description that the loss weights are learned during optimization.
+- Add monotonic degradation regularization only as an optional extra penalty, not as the primary paper constraint.
 - Compare data-only and physics-informed training.
 
 ### M5: PI-TNet

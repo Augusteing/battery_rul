@@ -27,8 +27,16 @@ regression_head:
 physics:
   enabled: true
   degradation_model: verhulst
-  residual_weight: 0.1
-  monotonicity_weight: 0.01
+  use_adaptive_weights: true
+  data_weight: 1.0
+  structural_weight: 1.0
+  temporal_weight: 1.0
+  monotonicity_weight: 0.0
+  initial_parameters:
+    r: 0.01
+    k: 0.2
+    u: 0.0
+    R: 0.0
 
 training:
   optimizer: adam

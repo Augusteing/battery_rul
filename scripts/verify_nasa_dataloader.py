@@ -5,6 +5,12 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = PROJECT_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from battery_rul.data.dataloaders import create_nasa_dataloaders
 from battery_rul.data.nasa import PAPER_NASA_CELLS
