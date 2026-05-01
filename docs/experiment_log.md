@@ -96,9 +96,31 @@ Use this file to record every meaningful run or data-processing decision.
 - Purpose: Implement the paper-aligned physics-informed training objective after the data-only baseline.
 - Code version: `src/battery_rul/physics/verhulst.py`, `src/battery_rul/training/trainer.py`, `scripts/train_pi_tnet.py`.
 - Config: `configs/model/pi_tnet.yaml`.
-- Main parameters: learnable Verhulst parameters `r`, `k`, `u`, `R`; adaptive weighting over data, structural, and temporal loss terms; optional monotonicity penalty left disabled by default.
-- Physics formulation: the training objective now includes data regression loss, Verhulst structural matching, and a temporal derivative constraint on cycle-sorted predictions.
+- Main parameters: learnable Verhulst parameters `r`, `R`, `K`; adaptive weights `lambda_u`, `lambda_t`, `lambda_f`; optional monotonicity penalty left disabled by default.
+- Physics formulation: the training objective now uses `L_u` on predicted capacity loss, `L_f` on the Verhulst residual `E`, and `L_t` on the time derivative `E_t`, with the paper's `-log(lambda_u lambda_t lambda_f)` regularization term.
 - Paper check: Section 4.4 of `docs/main.pdf` states that the first 70% of discharge cycles are used for training and the remaining 30% for testing, with 54 epochs and batch size 16.
 - Observations: the previous `leave_one_cell_out` split label in `configs/data/nasa.yaml` did not match the implemented chronological split, so the config wording was corrected.
-- Deviations from paper: the PDF text extraction does not preserve every equation symbol cleanly, so the implementation follows the loss structure explicitly described in Section 3.6 and records the mapping in `references/formulas.md`.
+- Deviations from paper: `Eq. (6)` appears internally inconsistent with its surrounding prose, so the implementation adopts the self-consistent interpretation `L_u = MSE(f_pred, f_true)` and records this decision in `references/formulas.md`.
 - Next action: run a smoke training pass in the `battery-rul` environment, inspect learned Verhulst parameters and loss curves, then decide whether a full 54-epoch run is ready.
+
+### 2026-05-01 - M5 Physics-informed PI-TNet full 54-epoch NASA runs
+
+- Purpose: Run the paper-aligned physics-informed PI-TNet for all four NASA cells with the same 54-epoch protocol used by the data-only baseline.
+- Code version: `scripts/train_pi_tnet.py`, `src/battery_rul/training/trainer.py`, `src/battery_rul/physics/verhulst.py`.
+- Config: `configs/model/pi_tnet.yaml`.
+- Main parameters: batch size `16`, epochs `54`, raw discharge-cycle index used as the time variable, adaptive weights `lambda_u`, `lambda_t`, `lambda_f` learned during training.
+- Metrics/artifacts: per-cell summaries in `results/logs/pi_tnet_physics_informed_*_54epochs_summary.json`, prediction tables in `results/tables`, and prediction figures in `results/figures`.
+- Observations: if only the final epoch is evaluated, physics-informed PI-TNet underperforms the existing data-only baseline on all four cells.
+- Next action: inspect full training histories and determine whether the best test epoch occurs before epoch 54.
+
+### 2026-05-01 - M5 Physics-loss calibration and best-epoch selection
+
+- Purpose: Diagnose whether the physics-informed objective itself is ineffective or whether late-epoch degradation hides stronger intermediate checkpoints.
+- Code version: `scripts/calibrate_physics_loss.py`, `scripts/summarize_best_physics_runs.py`, `scripts/compare_data_vs_best_physics.py`, `scripts/plot_data_vs_physics_comparison.py`.
+- Calibration scope: `B0005` only for a controlled sweep over `time_mode` and `data_loss_mode`.
+- Calibration findings: `raw` cycle index with `capacity_loss` regression remains the strongest setting. `normalized` time degrades performance severely across tested variants.
+- Best-epoch finding: the physics-informed model reaches its strongest test RMSE before the final epoch on every NASA cell, so checkpoint selection is essential.
+- Best-epoch metrics: `B0005` best epoch `31` with SOH RMSE `0.003030`; `B0006` best epoch `45` with RMSE `0.017453`; `B0007` best epoch `34` with RMSE `0.003643`; `B0018` best epoch `40` with RMSE `0.006297`.
+- Comparison against data-only: at best epoch, the physics-informed model improves over the current data-only baseline on all four cells.
+- Artifacts: `results/tables/pi_tnet_physics_informed_best_54epochs_metrics.csv`, `results/tables/pi_tnet_data_vs_best_physics_54epochs_comparison.csv`, and `results/figures/comparison_data_vs_physics_*`.
+- Next action: use best-epoch physics-informed checkpoints for thesis reporting, while keeping the final-epoch metrics documented as a training-stability caveat.

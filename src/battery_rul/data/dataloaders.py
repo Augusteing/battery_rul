@@ -67,6 +67,9 @@ class NasaPiTNetDataset(Dataset):
         self.feature_names = tuple(str(name) for name in archive["feature_names"])
         self.split = split
         self.battery_id = battery_id
+        self.max_discharge_index_by_battery = (
+            self.metadata.groupby("battery_id")["discharge_index"].max().to_dict()
+        )
 
     def __len__(self) -> int:
         return int(self.x.shape[0])
@@ -79,6 +82,9 @@ class NasaPiTNetDataset(Dataset):
             "soh": self.soh[index],
             "battery_id": row["battery_id"],
             "discharge_index": int(row["discharge_index"]),
+            "max_discharge_index": int(
+                self.max_discharge_index_by_battery[row["battery_id"]]
+            ),
             "cycle_index": int(row["cycle_index"]),
         }
 

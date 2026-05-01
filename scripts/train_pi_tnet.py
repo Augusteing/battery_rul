@@ -103,6 +103,7 @@ def main() -> None:
     paths = save_train_result(result, args.output_dir, run_name)
 
     final = result.history.iloc[-1].to_dict()
+    best = result.history.loc[result.history["epoch"] == result.best_epoch].iloc[0].to_dict()
     summary = {
         "stage": "M5_physics_informed_training" if physics_enabled else "M5_data_only_training",
         "run_name": run_name,
@@ -112,7 +113,9 @@ def main() -> None:
         "batch_size": batch_size,
         "standardize": not args.no_standardize,
         "physics_enabled": physics_enabled,
+        "best_epoch": result.best_epoch,
         "final_metrics": final,
+        "best_epoch_metrics": best,
         "outputs": {key: str(value) for key, value in paths.items()},
     }
     if physics_objective is not None:
@@ -130,6 +133,8 @@ def main() -> None:
     print(f"test SOH MAE: {final['test_soh_mae']:.6f}")
     print(f"test SOH RMSE: {final['test_soh_rmse']:.6f}")
     print(f"test SOH R2: {final['test_soh_r2']:.6f}")
+    print(f"best epoch: {result.best_epoch}")
+    print(f"best test SOH RMSE: {best['test_soh_rmse']:.6f}")
     for label, path in paths.items():
         print(f"Saved {label}: {path}")
     print(f"Saved summary: {summary_path}")

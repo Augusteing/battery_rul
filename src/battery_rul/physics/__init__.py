@@ -1,19 +1,19 @@
 """Physics-informed degradation constraints and residuals."""
 
 from battery_rul.physics.verhulst import (
-    AdaptiveLossWeights,
+    AdaptivePhysicsWeights,
     PhysicsConfig,
     PhysicsInformedObjective,
-    VerhulstCurve,
+    VerhulstDynamics,
     build_physics_objective_from_mapping,
     physics_config_from_mapping,
 )
 
 __all__ = [
-    "AdaptiveLossWeights",
+    "AdaptivePhysicsWeights",
     "PhysicsConfig",
     "PhysicsInformedObjective",
-    "VerhulstCurve",
+    "VerhulstDynamics",
     "build_physics_objective_from_mapping",
     "physics_config_from_mapping",
 ]

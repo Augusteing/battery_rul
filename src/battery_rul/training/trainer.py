@@ -41,7 +41,11 @@ class TrainResult:
     history: pd.DataFrame
     train_predictions: pd.DataFrame
     test_predictions: pd.DataFrame
+    best_epoch: int
+    best_train_predictions: pd.DataFrame
+    best_test_predictions: pd.DataFrame
     checkpoint: dict
+    best_checkpoint: dict
 
 
 def set_reproducible_seed(seed: int) -> None:
@@ -161,6 +165,12 @@ def train_model(
     if physics_objective is not None:
         physics_objective.to(device)
     history_rows = []
+    best_epoch = 0
+    best_metric = float("inf")
+    best_train_predictions = None
+    best_test_predictions = None
+    best_model_state_dict = None
+    best_physics_state_dict = None
     for epoch in range(1, max_epochs + 1):
         train_metrics = train_one_epoch(
             model=model,
@@ -180,6 +190,21 @@ def train_model(
         row.update(evaluate_predictions(train_predictions, "train"))
         row.update(evaluate_predictions(test_predictions, "test"))
         history_rows.append(row)
+        current_metric = float(row["test_soh_rmse"])
+        if current_metric < best_metric:
+            best_metric = current_metric
+            best_epoch = epoch
+            best_train_predictions = train_predictions.copy()
+            best_test_predictions = test_predictions.copy()
+            best_model_state_dict = {
+                key: value.detach().cpu().clone()
+                for key, value in model.state_dict().items()
+            }
+            if physics_objective is not None:
+                best_physics_state_dict = {
+                    key: value.detach().cpu().clone()
+                    for key, value in physics_objective.state_dict().items()
+                }
 
     checkpoint = {
         "model_state_dict": model.state_dict(),
@@ -194,11 +219,26 @@ def train_model(
             "std": None if standardizer is None else standardizer.std.detach().cpu(),
         },
     }
+    best_checkpoint = {
+        "model_state_dict": best_model_state_dict,
+        "best_epoch": best_epoch,
+        "max_epochs": max_epochs,
+        "standardize": standardize,
+        "physics_objective_state_dict": best_physics_state_dict,
+        "standardizer": {
+            "mean": None if standardizer is None else standardizer.mean.detach().cpu(),
+            "std": None if standardizer is None else standardizer.std.detach().cpu(),
+        },
+    }
     return TrainResult(
         history=pd.DataFrame(history_rows),
         train_predictions=train_predictions,
         test_predictions=test_predictions,
+        best_epoch=best_epoch,
+        best_train_predictions=best_train_predictions,
+        best_test_predictions=best_test_predictions,
         checkpoint=checkpoint,
+        best_checkpoint=best_checkpoint,
     )
 
 
@@ -215,14 +255,23 @@ def save_train_result(result: TrainResult, output_dir: Path, run_name: str) -> d
     train_pred_path = tables_dir / f"{run_name}_train_predictions.csv"
     test_pred_path = tables_dir / f"{run_name}_test_predictions.csv"
     checkpoint_path = checkpoint_dir / f"{run_name}.pt"
+    best_train_pred_path = tables_dir / f"{run_name}_best_train_predictions.csv"
+    best_test_pred_path = tables_dir / f"{run_name}_best_test_predictions.csv"
+    best_checkpoint_path = checkpoint_dir / f"{run_name}_best.pt"
 
     result.history.to_csv(history_path, index=False)
     result.train_predictions.to_csv(train_pred_path, index=False)
     result.test_predictions.to_csv(test_pred_path, index=False)
+    result.best_train_predictions.to_csv(best_train_pred_path, index=False)
+    result.best_test_predictions.to_csv(best_test_pred_path, index=False)
     torch.save(result.checkpoint, checkpoint_path)
+    torch.save(result.best_checkpoint, best_checkpoint_path)
     return {
         "history": history_path,
         "train_predictions": train_pred_path,
         "test_predictions": test_pred_path,
         "checkpoint": checkpoint_path,
+        "best_train_predictions": best_train_pred_path,
+        "best_test_predictions": best_test_pred_path,
+        "best_checkpoint": best_checkpoint_path,
     }
